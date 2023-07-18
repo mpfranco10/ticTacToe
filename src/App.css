@@ -1,0 +1,17 @@
+.game-board {
+  height: 80vh;
+}
+
+.token {
+  font-weight: bold;
+  margin: 0;
+  font-family: 'Permanent Marker', cursive;
+}
+
+.pinkToken {
+  color: pink;
+}
+
+.blueToken {
+  color: lightblue;
+}
