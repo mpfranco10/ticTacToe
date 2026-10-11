@@ -1,108 +1,102 @@
-import React, { useState } from 'react';
-import Square from '../Square/Square';
-import { checkForWinner, getNextTurn } from './BoardUtilities';
-import Label from '../Label';
+import { useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import Square from "../Square/Square";
+import { createEmptyBoard, getGameState } from "../../utils/gameLogic";
 
-const rowStyle = {
-  display: 'flex'
-};
+const Board = () => {
+  const [board, setBoard] = useState(createEmptyBoard);
+  const squareRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const { winner, winningSquares, currentPlayer, isDraw, isGameOver } =
+    getGameState(board);
+  const drawStatus = isDraw ? "Draw!" : `${currentPlayer}'s turn`;
+  const status = winner ? `${winner} wins!` : drawStatus;
 
-const boardStyle = {
-  width: '300px',
-  alignItems: 'center',
-  justifyContent: 'center',
-  display: 'grid'
-};
+  const playMove = (index: number) => {
+    setBoard((previousBoard) => {
+      if (previousBoard[index] || getGameState(previousBoard).isGameOver)
+        return previousBoard;
+      const { currentPlayer: player } = getGameState(previousBoard);
+      return previousBoard.map((cell, cellIndex) =>
+        cellIndex === index ? player : cell,
+      );
+    });
+  };
 
-const containerStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  height: '100%'
-} as React.CSSProperties;
-
-const buttonStyle = {
-  marginTop: '15px',
-  marginBottom: '16px'
-};
-
-export default function Board() {
-  const [board, setBoard] = useState<string[][]>([
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', '']
-  ]);
-  const [turn, setTurn] = useState<string>('X');
-  const [winner, setWinner] = useState<string | null>(null);
-
-  const updateBoard = (i: number, j: number) => {
-    const newBoard = [...board];
-    newBoard[i][j] = turn;
-    setBoard(newBoard);
-    const potentialWinner = checkForWinner(newBoard, turn, i, j);
-    if (potentialWinner) {
-      setWinner(potentialWinner);
-    } else {
-      setTurn(getNextTurn(turn));
+  const navigateBoard = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const row = Math.floor(index / 3);
+    const column = index % 3;
+    const destinations: Record<string, number> = {
+      ArrowRight: row * 3 + ((column + 1) % 3),
+      ArrowLeft: row * 3 + ((column + 2) % 3),
+      ArrowDown: ((row + 1) % 3) * 3 + column,
+      ArrowUp: ((row + 2) % 3) * 3 + column,
+      Home: 0,
+      End: 8,
+    };
+    if (event.key in destinations) {
+      event.preventDefault();
+      squareRefs.current[destinations[event.key]]?.focus();
     }
   };
 
-  const resetBoard = () => {
-    setBoard([
-      ['', '', ''],
-      ['', '', ''],
-      ['', '', '']
-    ]);
-    setTurn('X');
-    setWinner(null);
+  const resetGame = () => {
+    setBoard(createEmptyBoard());
+    squareRefs.current[0]?.focus();
   };
 
+  const drawLabel = isDraw
+    ? "A worthy match. Try another round?"
+    : "Get three in a row to win.";
+  const statusLabel = winner ? "Three in a row. Nicely played." : drawLabel;
+
   return (
-    <div style={containerStyle}>
-      <Label label="Next player:">
-        <span
-          className={'token '.concat(turn === 'O' ? 'pinkToken' : 'blueToken')}
-          style={{ marginLeft: '10px' }}
+    <>
+      <div className="status-panel">
+        <p
+          className="game-status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
         >
-          {turn}
-        </span>
-      </Label>
-
-      <Label label="Winner:">
-        {winner !== null ? (
           <span
-            className={'token '.concat(
-              winner === 'O' ? 'pinkToken' : 'blueToken'
-            )}
-            style={{ marginLeft: '10px' }}
-          >
-            {winner}
-          </span>
-        ) : (
-          <span style={{ marginLeft: '10px' }}>None</span>
-        )}
-      </Label>
-
-      <button style={buttonStyle} onClick={resetBoard}>
-        Reset
-      </button>
-      <div style={boardStyle}>
-        {board.map((row, i) => (
-          <div className="board-row" style={rowStyle} key={i}>
-            {row.map((currentToken, j) => (
-              <Square
-                key={i + '' + j}
-                i={i}
-                j={j}
-                disabled={winner != null || currentToken !== ''}
-                token={currentToken}
-                onSquareClick={updateBoard}
-              />
-            ))}
-          </div>
+            className={`status-dot ${winner || currentPlayer}`}
+            aria-hidden="true"
+          />
+          {status}
+        </p>
+        <p className="status-hint">{statusLabel}</p>
+      </div>
+      <div
+        className="board"
+        aria-label="Tic tac toe board"
+        aria-describedby="board-instructions"
+      >
+        {board.map((token, index) => (
+          <Square
+            key={index}
+            token={token}
+            index={index}
+            unavailable={isGameOver || token !== null}
+            isWinning={winningSquares.includes(index)}
+            buttonRef={(element) => {
+              squareRefs.current[index] = element;
+            }}
+            onSquareClick={() => playMove(index)}
+            onKeyDown={(event) => navigateBoard(event, index)}
+          />
         ))}
       </div>
-    </div>
+      <button className="reset-button" type="button" onClick={resetGame}>
+        New game <span aria-hidden="true">↻</span>
+      </button>
+      <p className="keyboard-hint" id="board-instructions">
+        Tab or arrow keys to explore · Enter or Space to play
+      </p>
+    </>
   );
-}
+};
+
+export default Board;

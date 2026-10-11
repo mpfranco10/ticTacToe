@@ -1,19 +1,64 @@
 .square {
-  width: 90px;
-  height: 90px;
-  background-color: #0c151c;
-  margin: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 20px;
-  border-radius: 15px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #314653;
+  border-radius: 18px;
+  background: #0c151c;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    transform 0.18s;
 }
-
-.square:hover {
-  background-color: #3c617c;
+.square:not([aria-disabled="true"]):hover {
+  background: #263f51;
+  border-color: #7291a8;
+  transform: translateY(-2px);
 }
-
-.squareDisabled {
-  background-color: #3c617c;
+.square:not([aria-disabled="true"]):active {
+  transform: scale(0.96);
+}
+.square[aria-disabled="true"] {
+  cursor: default;
+}
+.square-X,
+.square-O {
+  background: #203544;
+}
+.square-winning {
+  border-color: currentColor;
+  box-shadow: inset 0 0 0 1px currentColor;
+  background: #2d4656;
+}
+.square-X {
+  color: var(--blue);
+}
+.square-O {
+  color: var(--pink);
+}
+.token {
+  font-family: "Permanent Marker", "Comic Sans MS", cursive;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 13vw, 4rem);
+  line-height: 1;
+  animation: mark-appear 0.2s ease-out;
+}
+.token-X {
+  color: var(--blue);
+}
+.token-O {
+  color: var(--pink);
+}
+@keyframes mark-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }
