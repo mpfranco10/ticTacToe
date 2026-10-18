@@ -5,16 +5,13 @@ const App = () => (
   <main className="app">
     <section className="game" aria-labelledby="game-title">
       <header className="game-header">
-        <p className="eyebrow">A little friendly competition</p>
+        <p className="eyebrow">Two-player game</p>
         <h1 id="game-title">
           Tic <span>tac</span> toe.
         </h1>
-        <p>Two players. Nine squares. Your move.</p>
+        <p>Take turns and get three in a row.</p>
       </header>
       <Board />
-      <footer className="game-footer">
-        Made for two · Play on the same device
-      </footer>
     </section>
   </main>
 );
